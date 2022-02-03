@@ -17,7 +17,23 @@ import static java.nio.file.Files.walk;
 
 public class MixinPlugin implements IMixinConfigPlugin {
 
-    private static final Path MODS_DIRECTORY_PATH = new File(Launch.minecraftHome, "mods/").toPath();
+    static {
+        try {
+            System.out.println("Loading all jars!");
+            walk(new File(Launch.minecraftHome, "mods/").toPath())
+                    .map(Path::toFile)
+                    .filter((file) -> file.getName().endsWith(".jar"))
+                    .forEach(pathToJar -> {
+                        try {
+                            MinecraftURLClassPath.addJar(pathToJar);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -42,20 +58,6 @@ public class MixinPlugin implements IMixinConfigPlugin {
     // This method return a List<String> of mixins. Every mixins in this list will be loaded.
     @Override
     public List<String> getMixins() {
-        try {
-            walk(new File(Launch.minecraftHome, "mods/").toPath())
-                    .map(Path::toFile)
-                    .filter((file) -> file.getName().endsWith(".jar"))
-                    .forEach(pathToJar -> {
-                        try {
-                            MinecraftURLClassPath.addJar(pathToJar);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         return Collections.emptyList();
     }
 
